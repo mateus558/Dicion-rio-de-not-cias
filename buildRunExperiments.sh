@@ -12,5 +12,5 @@ cd ..
 ./exp hash
 ./exp trie
 
-mv *trie.svg ../Plots/TRIE
-mv *hash.svg ../Plots/Hash
+mv *trie.svg Plots/TRIE
+mv *hash.svg Plots/Hash

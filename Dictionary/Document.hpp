@@ -17,6 +17,10 @@ struct Document {
     Document(std::string category, std::string headline, std::string authors, std::string link, 
     std::string short_description, std::string date): category(category), headline(headline), 
     authors(authors), link(link), short_description(short_description), date(date) {}
+
+    bool operator==(const Document &other) const
+    { return (id == other.id);
+    }
 };
 
 struct DocumentCompare
@@ -26,5 +30,6 @@ struct DocumentCompare
        return lhs->unique_terms < rhs->unique_terms;
    }
 };
+
 
 #endif
