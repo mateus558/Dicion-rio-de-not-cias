@@ -31,5 +31,12 @@ struct DocumentCompare
    }
 };
 
+struct DocumentRankCompare
+{
+   bool operator() (const Document* lhs, const Document* rhs) const
+   {
+       return lhs->rank < rhs->rank;
+   }
+};
 
 #endif

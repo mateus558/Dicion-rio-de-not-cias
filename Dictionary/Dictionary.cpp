@@ -1,5 +1,6 @@
 #include "Dictionary.hpp"
-
+#include <queue>
+#include <set>
 Dictionary::Dictionary(){ 
     char_translator[(unsigned char)'á'] = 'a';
     char_translator[(unsigned char)'Á'] = 'a';
@@ -83,34 +84,60 @@ std::string Dictionary::processString(const std::string& str){
 std::vector<Document*> Dictionary::findByTerms(const std::string& terms){
     std::string term, clean_terms = processString(terms);
     std::stringstream input_stringstream(clean_terms);
-    std::vector<Document*> results;
+    std::vector<Document*> results(20, nullptr);
+    std::priority_queue<Document*, std::vector<Document*>, DocumentRankCompare> heap;
 
     while(std::getline(input_stringstream, term, ' ')){
         if(term.size() == 1 || term.empty()) continue;
         auto search_result = find(term);
         if(!search_result) continue;
         for(auto it = search_result->docs_counts.begin(); it != search_result->docs_counts.end(); it++){
-            if(!documents[(*it).first->id]->unique_terms) continue;
-            documents[(*it).first->id]->rank += ((double)1.0/documents[(*it).first->id]->unique_terms)*search_result->weight_i[(*it).first->id];        
+            auto id = (*it).first->id;
+            if(!documents[id]->unique_terms) continue;
+            double rank = ((double)1.0/documents[id]->unique_terms)*search_result->weight_i[id];
+            documents[id]->rank += rank;
+            if(rank != 0){
+                heap.push(documents[id]);
+            }
+            
         }
     }
 
-    std::sort(documents.begin(),documents.end(), [](Document* a, Document *b){
+    std::set<size_t> indexes;
+    size_t count = 0;
+    while(!heap.empty() && count < 20){
+        auto res = heap.top();
+        heap.pop();
+        size_t pos = res->id%20;
+        while(results[pos]){ pos = (pos+1)%20; }
+        if(indexes.find(res->id) == indexes.end()){
+            results[pos] = res;
+            count++;
+            indexes.insert(res->id);
+        }
+    }
+
+    std::sort(results.begin(),results.end(), [](Document* a, Document *b){
         if(!a && !b) return false;
         if(a && !b) return true;
         if(!a && b) return false;
         return a->rank > b->rank;
     });
 
-    for(size_t i = 0; i < 20; i++){
-        if(i == documents.size()) break;
-        if(!documents[i]) continue;
-        results.push_back(documents[i]);
+    size_t j = 0;
+    for(size_t i = 0; i < results.size(); i++){
+        if(!results[i]){
+            while(documents[j]->rank > 0){
+                j++;
+            }
+            results[i] = documents[j];
+        }
+
         if(verbose){
-            std::cout << "Document: " << documents[i]->id << " Rank: " << documents[i]->rank << std::endl;
-            std::cout << "Headline: " << documents[i]->headline << std::endl;
-            std::cout << "Short description: " << documents[i]->short_description << std::endl;
-            std::cout << "Link: " << documents[i]->link << std::endl;
+            std::cout << "Document: " << results[i]->id << " Rank: " << results[i]->rank << std::endl;
+            std::cout << "Headline: " << results[i]->headline << std::endl;
+            std::cout << "Short description: " << results[i]->short_description << std::endl;
+            std::cout << "Link: " << results[i]->link << std::endl;
             std::cout << std::endl;
             std::cout << "---------------------------------------------------------------------------------\n";
             std::cout << std::endl;

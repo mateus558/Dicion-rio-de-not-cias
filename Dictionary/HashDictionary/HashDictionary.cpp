@@ -21,8 +21,10 @@ size_t HashDictionary::h(const std::string key){
 DictNode* HashDictionary::find(const std::string& word){
     size_t key = h(word) % table_size;
     
+    comparisons = 2;
     while(table[key] && table[key]->value != word){
         key++;
+        comparisons++;
     }
     if(!table[key]){
         return nullptr;

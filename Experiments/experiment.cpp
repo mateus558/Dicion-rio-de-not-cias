@@ -11,6 +11,9 @@ using namespace std::chrono;
 
 HashDictionary dict;
 std::string strategy;
+double avg_comparisons = 0.0;
+double avg_term_size = 0.0;
+
 
 std::vector<std::string> generateRandomQueries(const std::string& path, const size_t n_queries, const size_t query_size){
 	std::ifstream file(path);
@@ -30,6 +33,7 @@ std::vector<std::string> generateRandomQueries(const std::string& path, const si
 			std::string term;
 			while(std::getline(ss, term, ' ')){
 				if(term.size() <= 2 || term.empty()) continue;
+				avg_term_size += term.size();
 				search_terms.push_back(term);
 			}
 		}
@@ -37,6 +41,7 @@ std::vector<std::string> generateRandomQueries(const std::string& path, const si
 		std::cerr << "The file could not be opened." << std::endl;
 	}
 	file.close();
+	avg_term_size /= search_terms.size();
 
 	std::random_device rd;
 	std::mt19937 generator(rd());
@@ -53,7 +58,7 @@ std::vector<std::string> generateRandomQueries(const std::string& path, const si
 	return queries_selected;
 }
 
-std::vector<duration<float> > time_experiment(const std::string &path, const size_t n_queries, const size_t n_terms, Dictionary *_dict){
+std::vector<duration<float> > time_experiment(const std::string &path, const size_t n_queries, const size_t n_terms, Dictionary *_dict, double *avg_comparisons){
 	std::clog << "Generating queries..." << std::endl;
 	std::vector<std::string> queries = generateRandomQueries(path, n_queries, n_terms);
 	std::vector<duration<float> > durations;
@@ -66,15 +71,19 @@ std::vector<duration<float> > time_experiment(const std::string &path, const siz
 		std::clog << "Processing query with " << n_terms << " terms [" << i+1 << "/" << queries.size() << "]" << std::endl;
 		auto start = high_resolution_clock::now(); 
 		_dict->findByTerms(queries[i]);
-		auto stop = high_resolution_clock::now(); 
+		auto stop = high_resolution_clock::now();
+		(*avg_comparisons) += _dict->numberComparisons(); 
 		durations.push_back(stop - start); 
 	}
+
+	(*avg_comparisons) /= queries.size();
 	std::clog << "Generating time plot for queries with " << n_terms << " terms..." << std::endl;
+	std::clog << "Average number of comparisons: " << (*avg_comparisons) << std::endl;
 	int step = 1000;
 	double avg = 0.0;
 	for(size_t i = 0; i < durations.size(); i++){
 		if(i%step == 0){
-			plot_data.push_back(std::make_pair(i, avg/step));
+			plot_data.push_back(std::make_pair(i, (avg/step)*1000));
 			avg = 0.0;
 		}
 		avg += durations[i].count();
@@ -82,7 +91,7 @@ std::vector<duration<float> > time_experiment(const std::string &path, const siz
 	gp << "set terminal svg" << std::endl;
 	gp << "set output 'queries_time_" << n_terms << "_terms_plot_" << strategy << ".svg'" << std::endl;
 	gp << "set xlabel 'Number of queries'" << std::endl;
-	gp << "set ylabel 'Time (secs)'" << std::endl;
+	gp << "set ylabel 'Time (ms)'" << std::endl;
 	gp << "plot" << gp.file1d(plot_data) << "with lines title 'avg query time'" << std::endl;
 	return durations;
 }
@@ -109,7 +118,7 @@ int main(int argc, char* argv[]){
 		to_exp = new TRIEDictionary();
 	}
 	
-	double vm, rss;
+	double vm, rss, avg_comparisons1 = 0.0, avg_comparisons2 = 0.0;
 
 	std::cout << "Strategy: " << strategy << std::endl;
 	to_exp->setVerbose(false);
@@ -122,13 +131,13 @@ int main(int argc, char* argv[]){
 	
 	process_mem_usage(vm, rss);
 	
-	auto time_durations = time_experiment(path, n_queries, 1, to_exp);
+	auto time_durations = time_experiment(path, n_queries, 1, to_exp, &avg_comparisons1);
 	double avg_time, avg_time1;
 	avg_time = avg_time1 = 0.0;    
 	for(size_t i = 0; i < time_durations.size(); i++) {
 		avg_time += time_durations[i].count();
 	}
-	time_durations = time_experiment(path, n_queries, 2, to_exp);
+	time_durations = time_experiment(path, n_queries, 2, to_exp, &avg_comparisons2);
 	for(size_t i = 0; i < time_durations.size(); i++) {
 		avg_time1 += time_durations[i].count();
 	}
@@ -142,6 +151,9 @@ int main(int argc, char* argv[]){
 	std::clog << "Memory used by the dictionary VM: " << vm << " RSS: " << rss << " (Kb)" << std::endl;
 	std::clog << "Average query time with 1 term: " << avg_time/n_queries << " seconds" << std::endl;
 	std::clog << "Average query time with 2 terms: " << avg_time1/n_queries << " seconds" << std::endl;
+	std::clog << "Average comparisons with 1 term: " << avg_comparisons1  << std::endl;
+	std::clog << "Average comparisons with 2 terms: " << avg_comparisons2 << std::endl;
+	std::clog << "Average term size: " << avg_term_size << std::endl;
 	to_exp->generatePlots(strategy);
 	return 0;   
 }

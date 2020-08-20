@@ -10,7 +10,9 @@ cp Experiments/exp ..
 cd ..
 
 ./exp hash
-./exp trie
-
-mv *trie.svg Plots/TRIE
 mv *hash.svg Plots/Hash
+
+./exp trie
+mv *trie.svg Plots/TRIE
+
+

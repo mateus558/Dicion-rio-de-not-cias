@@ -108,11 +108,10 @@ void TRIEDictionary::computeTermsParameters_helper(TrieNode* root, int *j){
 
 DictNode* TRIEDictionary::find(const std::string& word){
     auto current = this->root;
-
+    comparisons = 0;
     for(auto it = word.begin(); it != word.end(); it++){
         char c = *it;
         if(c == ' ') continue;
-        
         if(c >= 48 && c <= 57){
             size_t key = c - '0';
             if(!current->children_list){
@@ -120,6 +119,7 @@ DictNode* TRIEDictionary::find(const std::string& word){
             }else{
                 auto curr = current->children_list;
                 while(curr){
+                    comparisons++;
                     if(curr->key == key){
                         current = curr->node;
                         break;
@@ -129,6 +129,7 @@ DictNode* TRIEDictionary::find(const std::string& word){
             }
         }else{
             size_t key = c - 'a';
+            comparisons++;
             if(current->children && current->children[key]){
                 current = current->children[key];
             }else{
