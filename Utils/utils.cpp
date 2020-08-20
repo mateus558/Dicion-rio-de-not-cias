@@ -4,7 +4,7 @@
 
 
 void waitUserAction(){
-    std::cout << "\nPress ENTER to continue..." << std::endl;
+    std::cout << "\nPress any key to finish..." << std::endl;
     std::cin.ignore(std::numeric_limits<std::streamsize>::max(),'\n');
     std::cin.get();
 }

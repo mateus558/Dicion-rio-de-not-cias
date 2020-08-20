@@ -99,7 +99,6 @@ std::vector<Document*> Dictionary::findByTerms(const std::string& terms){
             if(rank != 0){
                 heap.push(documents[id]);
             }
-            
         }
     }
 
@@ -108,10 +107,8 @@ std::vector<Document*> Dictionary::findByTerms(const std::string& terms){
     while(!heap.empty() && count < 20){
         auto res = heap.top();
         heap.pop();
-        size_t pos = res->id%20;
-        while(results[pos]){ pos = (pos+1)%20; }
         if(indexes.find(res->id) == indexes.end()){
-            results[pos] = res;
+            results[count] = res;
             count++;
             indexes.insert(res->id);
         }
@@ -125,22 +122,13 @@ std::vector<Document*> Dictionary::findByTerms(const std::string& terms){
     });
 
     size_t j = 0;
-    for(size_t i = 0; i < results.size(); i++){
+    for(size_t i = count; i < results.size(); i++){
         if(!results[i]){
+            j++;
             while(documents[j]->rank > 0){
                 j++;
             }
             results[i] = documents[j];
-        }
-
-        if(verbose){
-            std::cout << "Document: " << results[i]->id << " Rank: " << results[i]->rank << std::endl;
-            std::cout << "Headline: " << results[i]->headline << std::endl;
-            std::cout << "Short description: " << results[i]->short_description << std::endl;
-            std::cout << "Link: " << results[i]->link << std::endl;
-            std::cout << std::endl;
-            std::cout << "---------------------------------------------------------------------------------\n";
-            std::cout << std::endl;
         }
     }
     return results;

@@ -25,18 +25,37 @@ int main(int argc, char* argv[]){
         dict = new TRIEDictionary();
     }
 
-    dict->setVerbose(true);
+    dict->setVerbose(false);
     dict->insert(path);
 
-    clear();
+    while(true){
+        clear();
 
-    std::clog << "Number of documents: " << dict->getNumberOfDocuments() << std::endl;
-    std::clog << "Number of distinct terms: " << dict->distinctTerms() << std::endl;
-    std::clog << "\n-------------------------------------------------------------------\n\n";
-    std::cout << "Search documents: ";
-    std::cin >> search_terms;
+        std::clog << "Number of documents: " << dict->getNumberOfDocuments() << std::endl;
+        std::clog << "Number of distinct terms: " << dict->distinctTerms() << std::endl;
+        std::clog << "\n-------------------------------------------------------------------\n\n";
+        std::cout << "Search documents: ";
+        std::cin >> search_terms;
 
-    dict->findByTerms(search_terms);
+        auto search_results = dict->findByTerms(search_terms);
 
+        for(size_t i = 0; i < search_results.size(); i++){
+            std::cout << "Document: " << search_results[i]->id << " Rank: " << search_results[i]->rank << std::endl;
+            std::cout << "Headline: " << search_results[i]->headline << std::endl;
+            std::cout << "Short description: " << search_results[i]->short_description << std::endl;
+            std::cout << "Link: " << search_results[i]->link << std::endl;
+            std::cout << std::endl;
+            std::cout << "---------------------------------------------------------------------------------\n";
+            std::cout << std::endl;
+        }
+
+        std::cout << "Continue to search? [y/n]: ";
+        char c;
+        std::cin.clear();
+        std::cin >> c;
+        if(c != 'y'){
+            break;
+        }
+    }
     waitUserAction();
 }
