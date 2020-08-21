@@ -10,9 +10,15 @@ void waitUserAction(){
 }
 
 void clear(){
-    int status = system("clear");
-    if (status < 0)
-        std::cout << "Error: " << strerror(errno) << '\n';
+#ifdef __unix__
+    system("clear");
+#elif _WIN32
+    system("CLS");
+#else
+    int n;
+        for (n = 0; n < 10; n++)
+          printf( "\n\n\n\n\n\n\n\n\n\n" );
+#endif
 }
 
 void process_mem_usage(double& vm_usage, double& resident_set){

@@ -17,7 +17,10 @@ int main(int argc, char* argv[]){
     }
 
     Dictionary *dict;
-    std::string path("data/News_Category_Dataset_v2.json"), search_terms;
+    std::string path("data/"), fname, search_terms;
+    std::cout << "Enter the dataset file name: ";
+    std::cin >> fname;
+    path += fname;
 
     if(strategy == "hash"){ 
         dict = new HashDictionary();
@@ -25,8 +28,13 @@ int main(int argc, char* argv[]){
         dict = new TRIEDictionary();
     }
 
+    clear();
     dict->setVerbose(false);
-    dict->insert(path);
+    std::cout << "Loading dataset..." << std::endl;
+    if(!dict->insert(path)){
+        std::cerr << "Error loading the dataset!" << std::endl;
+        return 1;
+    }
 
     while(true){
         clear();
@@ -35,9 +43,11 @@ int main(int argc, char* argv[]){
         std::clog << "Number of distinct terms: " << dict->distinctTerms() << std::endl;
         std::clog << "\n-------------------------------------------------------------------\n\n";
         std::cout << "Search documents: ";
-        std::cin >> search_terms;
+        std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+        std::getline(std::cin, search_terms);
 
         auto search_results = dict->findByTerms(search_terms);
+        if(search_results.empty()) return 1;
 
         for(size_t i = 0; i < search_results.size(); i++){
             std::cout << "Document: " << search_results[i]->id << " Rank: " << search_results[i]->rank << std::endl;
@@ -48,12 +58,11 @@ int main(int argc, char* argv[]){
             std::cout << "---------------------------------------------------------------------------------\n";
             std::cout << std::endl;
         }
-
-        std::cout << "Continue to search? [y/n]: ";
-        char c;
         std::cin.clear();
-        std::cin >> c;
-        if(c != 'y'){
+        std::cout << "Continue to search? [y/n]: ";
+        std::string opt;
+        std::cin >> opt;
+        if(opt != "y"){
             break;
         }
     }

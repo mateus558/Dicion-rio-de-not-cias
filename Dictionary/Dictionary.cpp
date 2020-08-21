@@ -77,7 +77,6 @@ std::string Dictionary::processString(const std::string& str){
         }    
         return (unsigned char)' ';
     });
-
     return clean_str;
 }
 
@@ -87,8 +86,14 @@ std::vector<Document*> Dictionary::findByTerms(const std::string& terms){
     std::vector<Document*> results(20, nullptr);
     std::priority_queue<Document*, std::vector<Document*>, DocumentRankCompare> heap;
 
+    size_t n_terms = 0;
     while(std::getline(input_stringstream, term, ' ')){
         if(term.size() == 1 || term.empty()) continue;
+        n_terms++;
+        if(n_terms > 2){
+            std::cerr << "Error: too many terms for search. [Only 2 allowed]" << std::endl;
+            return std::vector<Document*>();
+        }
         auto search_result = find(term);
         if(!search_result) continue;
         for(auto it = search_result->docs_counts.begin(); it != search_result->docs_counts.end(); it++){
@@ -125,7 +130,7 @@ std::vector<Document*> Dictionary::findByTerms(const std::string& terms){
     for(size_t i = count; i < results.size(); i++){
         if(!results[i]){
             j++;
-            while(documents[j]->rank > 0){
+            while(j < documents.size() && documents[j]->rank > 0){
                 j++;
             }
             results[i] = documents[j];
@@ -135,12 +140,12 @@ std::vector<Document*> Dictionary::findByTerms(const std::string& terms){
 }
 
 bool Dictionary::insert(const json& document){
-    std::string parsed, input = document["short_description"];
+    std::string parsed, input = document["headline"];
     Document* doc_info = new Document(document["category"], document["headline"], document["authors"], document["link"], 
                             document["short_description"], document["date"]);
     
     input += ' ';
-    input += document["headline"];
+    input += document["short_description"];
     doc_info->id = documents.size();
     documents.push_back(doc_info);
     
