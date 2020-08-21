@@ -150,7 +150,7 @@ int main(int argc, char* argv[]){
 	}
 	std::clog << "-------------------------------------------------------------------------------\n";
 	std::clog << "Time to construct the dictionary: " << time_fill_dict.count() << "s" << std::endl;
-	std::clog << "Memory used by the dictionary VM: " << vm << " RSS: " << rss << " (Kb)" << std::endl;
+	std::clog << "Memory used by the dictionary VM: " << vm/1024 << " RSS: " << rss/1024 << " (Mb)" << std::endl;
 	std::clog << "Average query time with 1 term: " << avg_time * 1E6 << " \xC2\xB5s" << std::endl;
 	std::clog << "Average query time with 2 terms: " << avg_time1 * 1E6 << " \xC2\xB5s" << std::endl;
 	std::clog << "Average comparisons with 1 term: " << avg_comparisons1  << std::endl;
