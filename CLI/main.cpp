@@ -21,6 +21,7 @@ int main(int argc, char* argv[]){
     std::cin >> fname;
     path += fname;
 
+    // initialize the dictionary with the given strategy
     if(strategy == "hash"){ 
         dict = new HashDictionary();
     }else{
@@ -28,6 +29,7 @@ int main(int argc, char* argv[]){
     }
 
     clear();
+    // load the dataset into the dictionary
     dict->setVerbose(false);
     std::cout << "Loading dataset..." << std::endl;
     if(!dict->insert(path)){
@@ -36,18 +38,21 @@ int main(int argc, char* argv[]){
     }
 
     while(true){
-        //clear();
+        clear();
 
         std::clog << "Number of documents: " << dict->getNumberOfDocuments() << std::endl;
         std::clog << "Number of distinct terms: " << dict->distinctTerms() << std::endl;
         std::clog << "\n-------------------------------------------------------------------\n\n";
+        // ask to the user for query terms
         std::cout << "Search documents: ";
         std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
         std::getline(std::cin, search_terms);
 
+        // get the array of results
         auto search_results = dict->findByTerms(search_terms, 20);
         if(search_results.empty()) return 1;
         
+        // show results info in the console
         for(size_t i = 0, id = 0; i < search_results.size(); i++, ++id){
             auto news = search_results[i];
             std::cout << "[" << id+1 << "] Document: " << news->id << " Rank: " << news->rank << std::endl;

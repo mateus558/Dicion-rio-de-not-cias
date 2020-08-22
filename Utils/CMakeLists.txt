@@ -4,6 +4,8 @@ set(Boost_USE_STATIC_RUNTIME OFF)
 find_package(Boost 1.45.0 COMPONENTS iostreams system filesystem) 
 find_package(Gnuplot)
 
+message(STATUS "Boost version: ${Boost_VERSION}")
+
 if(Boost_FOUND AND GNUPLOT_FOUND)
     include_directories(${Boost_INCLUDE_DIRS}) 
 

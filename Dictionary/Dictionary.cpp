@@ -5,7 +5,8 @@
 #include <sstream>
 #include <chrono>
 
-Dictionary::Dictionary(){ 
+Dictionary::Dictionary(){
+    // accented characters mapping
     char_translator[(unsigned char)'á'] = 'a';
     char_translator[(unsigned char)'Á'] = 'a';
     char_translator[(unsigned char)'à'] = 'a';
@@ -52,73 +53,78 @@ Dictionary::Dictionary(){
     char_translator[(unsigned char)'Ñ'] = 'n';
 }
 
-void Dictionary::generatePlots(const std::string& strategy){
-    gp << "set terminal svg" << std::endl;
-    gp << "set output 'insertion_mem_plot_" << strategy << ".svg'" << std::endl;
-    gp << "set xlabel 'Number of documents'" << std::endl;
-    gp << "set ylabel 'Memory (Mb)'" << std::endl;
-    gp << "plot" << gp.file1d(mem_measures) << "with lines title 'Virtual memory'" << std::endl;
- 
-    gp << "set output 'insertion_time_plot_" << strategy << ".svg'" << std::endl;
-    gp << "set xlabel 'Number of documents'" << std::endl;
-    gp << "set ylabel 'Time (ms)'" << std::endl;
-    gp << "plot" << gp.file1d(time_measures) << "with lines title 'avg insertion time'" << std::endl;
-    
-    mem_measures.clear();
-    time_measures.clear();
-}
-
 bool Dictionary::isValidTerm(const std::string& term){
+    // verify if first character is a number and if the term size is equal to 1 or empty
     if((term[0] >= '0' && term[0] <= '9') || (term.size() == 1 || term.empty())) return false;
+    // check if the term is a number
     if(!term.empty() && std::find_if(term.begin(), term.end(), [](unsigned char c) { return !std::isdigit(c); }) == term.end()) return false;
+    // otherwise, it's a valid term
     return true;
 }
 
-std::string Dictionary::processString(const std::string& str){
+
+std::string Dictionary::normalizeString(const std::string& str){
     std::string clean_str, nopunct;
 
     clean_str.resize(str.size());
     std::transform(str.begin(),str.end(), clean_str.begin(), [this](unsigned char c){
+        // if it's a lower case character, return it
         if(c <= 122 && c >= 97) return (char)c;
+        // if it's a uppercase character return it's lower case version
         if(c >= 65 && c <= 90) return (char)(c+32);
+        // if it's a number, return it
         if(c >= 48 && c <= 57) return (char)c;
+        // the - char represents the separation of two words, so it must return a space
         if(c == '-') return ' ';
+        // if it's a punctuation character, return a mark to remove later
         if(std::ispunct(c)) return (char)'.';
+        // transform accented letters in lower case non accentuated letter
         if(char_translator.find(c) != char_translator.end()){
             return (char)char_translator[c];
         }
+        // as accentuated letters can't be represented by a char, it is represented by
+        // a multi char, causing problems, so this conditional mark unecessary codes to be removed
         if(c == 195 || c == 197 || c == 225) return '.';
         if(c == 196) return 'i';
         return (char)' ';
     });
+    // remove all chars that are marked with .
     clean_str.erase(std::remove(clean_str.begin(), clean_str.end(), '.'), clean_str.end());
 
     return clean_str;
 }
 
 std::vector<Document*> Dictionary::findByTerms(const std::string& terms, const size_t &n_results){
-    std::string term, clean_terms = processString(terms);
+    // clean the query string
+    std::string term, clean_terms = normalizeString(terms);
     std::stringstream input_stringstream(clean_terms);
+    // initialize the results array and the heap for the results
     std::vector<Document*> results(n_results, nullptr);
     heap = new DocumentHeap(n_results);
 
     size_t n_terms = 0;
     size_t n_comparisons = 0;
+    // break the query string into terms
     while(std::getline(input_stringstream, term, ' ')){
+        // verify if its a valid term
         if(!this->isValidTerm(term)) continue;
         n_terms++;
         if(n_terms > 2){
             std::cerr << "Error: too many terms for search. [Only 2 allowed]" << std::endl;
             return std::vector<Document*>();
         }
+        // find the list of documents that match this term
         auto search_result = this->find(term);
+        // count the number of comparisons
         n_comparisons += this->numberComparisons();
         if(!search_result) continue;
+        // compute the documents rank and add it to the heap
         for(auto it = search_result->docs_counts.begin(); it != search_result->docs_counts.end(); it++){
             auto id = (*it).first->id;
             if(!documents[id]->unique_terms) continue;
             double rank = ((double)1.0/documents[id]->unique_terms)*search_result->weight_i[id];
             documents[id]->rank += rank;
+            // only add the document to the heap if its rank is different from zero or if it was updated
             if(rank != 0){
                 heap->insertOrUpdate(documents[id]);
             }
@@ -126,6 +132,7 @@ std::vector<Document*> Dictionary::findByTerms(const std::string& terms, const s
     }
     comparisons = n_comparisons;
 
+    // get the documents with bigger rank and add it to the results array
     size_t i = 0;
     while(!heap->empty()){
         results[i] = heap->pop();
@@ -135,6 +142,7 @@ std::vector<Document*> Dictionary::findByTerms(const std::string& terms, const s
     delete heap;
     heap = nullptr;
 
+    // fill the rest of the results array with other documents if there isn't enough documents in the heap
     if(i < n_results){
         size_t k = 0;
         for(size_t j = i; j < results.size(); j++){
@@ -147,18 +155,22 @@ std::vector<Document*> Dictionary::findByTerms(const std::string& terms, const s
 }
 
 bool Dictionary::insert(const json& document){
-    std::string term, input = document["headline"];
+    std::string term, terms_str = document["headline"];
+    // create the document object
     Document* doc_info = new Document(document["category"], document["headline"], document["authors"], document["link"], 
                             document["short_description"], document["date"]);
     
-    input += ' ';
-    input += document["short_description"];
+    terms_str += ' ';
+    terms_str += document["short_description"];
     doc_info->id = documents.size();
     documents.push_back(doc_info);
     
-    std::string clean_input = processString(input);
-    std::stringstream input_stringstream(clean_input);
-    while(std::getline(input_stringstream, term, ' ')){
+    // normalize the terms string
+    std::string clean_terms_str = normalizeString(terms_str);
+    std::stringstream terms_stringstream(clean_terms_str);
+    // split the terms string into terms, verify if they are valid and insert into the dictionary
+    // with their respective document
+    while(std::getline(terms_stringstream, term, ' ')){
         if(!isValidTerm(term)) continue;
         if(!insert(term, doc_info)) return false;
     }
@@ -170,8 +182,9 @@ bool Dictionary::insert(const std::string& path){
     if(file.is_open()){
         std::string raw_doc;
         duration<double> time_elapsed;
-        
+        // get all the documents from a file line by line
         while(std::getline(file, raw_doc)){
+            // at each 20000 documents save the average insertion time in milliseconds and the virtual memory usage
             if(documents.size() % 20000 == 0){
                 time_measures.push_back(std::make_pair(documents.size(), (time_elapsed.count() * 1E3)/20000));
                 double vm, rss;
@@ -183,6 +196,7 @@ bool Dictionary::insert(const std::string& path){
             }
             bool status;
             auto start = high_resolution_clock::now();
+            // insert the parsed document into the dictionary
             status = insert(json::parse(raw_doc));
             auto end = high_resolution_clock::now();
             time_elapsed += (end-start);
@@ -200,6 +214,7 @@ bool Dictionary::insert(const std::string& path){
     if(verbose){
             std::cout << "Number of unique terms: " << distinct_terms << std::endl;
     }
+    // compute the weights of all terms
     computeTermsParameters();
     return true;
 }

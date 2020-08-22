@@ -15,7 +15,9 @@
 //
 // On failure, returns 0.0, 0.0
 void process_mem_usage(double& vm_usage, double& resident_set);
+/// clear the console
 void clear();
+/// wait for the user to press a key
 void waitUserAction();
 
 #endif
