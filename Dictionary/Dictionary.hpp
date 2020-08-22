@@ -1,19 +1,22 @@
 #ifndef DICTIONARY_HPP_INCLUDED
 #define DICTIONARY_HPP_INCLUDED
 
-#include "DictNode.hpp"
 #include "DocumentHeap.hpp"
 #include "../Utils/json.hpp"
 #include "../Utils/gnuplot-iostream.h"
 #include "../Utils/utils.hpp"
-#include <iostream>
-#include <fstream>
-#include <sstream>
-#include <vector>
-#include <chrono>
+
+#include <map>
 
 using json = nlohmann::json;
 using namespace std::chrono;
+
+
+class DictNode{
+public:
+    std::map<size_t, double> weight_i;
+    std::map<Document*, size_t, DocumentCompare> docs_counts;
+};
 
 class Dictionary {
 protected:
@@ -28,6 +31,7 @@ protected:
     std::vector<std::pair<double, double> > mem_measures;
 
     virtual void computeTermsParameters() = 0;
+    bool isValidTerm(const std::string& term);
 
 public:
     Dictionary();

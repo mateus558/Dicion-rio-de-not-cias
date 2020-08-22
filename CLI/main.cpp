@@ -1,7 +1,6 @@
 #include "Dictionary.hpp"
 #include "TRIEDictionary.hpp"
 #include "HashDictionary.hpp"
-#include <iostream>
 
 std::string strategy;
 

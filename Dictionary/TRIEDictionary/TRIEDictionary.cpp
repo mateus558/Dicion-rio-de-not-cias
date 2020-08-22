@@ -1,8 +1,6 @@
 #include "TRIEDictionary.hpp"
-#include <sstream>
 #include <math.h>
 #include <cctype>
-#include <algorithm>
 
 TRIEDictionary::TRIEDictionary(){
     root = new TrieNode();

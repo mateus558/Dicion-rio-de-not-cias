@@ -1,6 +1,10 @@
 #include "Dictionary.hpp"
-#include <queue>
-#include <set>
+
+#include <iostream>
+#include <fstream>
+#include <sstream>
+#include <chrono>
+
 Dictionary::Dictionary(){ 
     char_translator[(unsigned char)'á'] = 'a';
     char_translator[(unsigned char)'Á'] = 'a';
@@ -62,6 +66,12 @@ void Dictionary::generatePlots(const std::string& strategy){
     gp << "plot" << gp.file1d(mem_measures) << "with lines title 'Virtual memory'" << std::endl;
 }
 
+bool Dictionary::isValidTerm(const std::string& term){
+    if((term[0] >= '0' && term[0] <= '9') || (term.size() == 1 || term.empty())) return false;
+    if(!term.empty() && std::find_if(term.begin(), term.end(), [](unsigned char c) { return !std::isdigit(c); }) == term.end()) return false;
+    return true;
+}
+
 std::string Dictionary::processString(const std::string& str){
     std::string clean_str, nopunct;
 
@@ -91,7 +101,7 @@ DocumentHeap* Dictionary::findByTerms(const std::string& terms){
 
     size_t n_terms = 0;
     while(std::getline(input_stringstream, term, ' ')){
-        if((term[0] >= '0' && term[0] <= '9') || (term.size() == 1 || term.empty())) continue;
+        if(!isValidTerm(term)) continue;
         n_terms++;
         if(n_terms > 2){
             std::cerr << "Error: too many terms for search. [Only 2 allowed]" << std::endl;
@@ -121,7 +131,7 @@ DocumentHeap* Dictionary::findByTerms(const std::string& terms){
 }
 
 bool Dictionary::insert(const json& document){
-    std::string parsed, input = document["headline"];
+    std::string term, input = document["headline"];
     Document* doc_info = new Document(document["category"], document["headline"], document["authors"], document["link"], 
                             document["short_description"], document["date"]);
     
@@ -132,9 +142,9 @@ bool Dictionary::insert(const json& document){
     
     std::string clean_input = processString(input);
     std::stringstream input_stringstream(clean_input);
-    while(std::getline(input_stringstream, parsed, ' ')){
-        if((parsed[0] >= '0' && parsed[0] <= '9') || (parsed.size() == 1 || parsed.empty())) continue;
-        if(!insert(parsed, doc_info)) return false;
+    while(std::getline(input_stringstream, term, ' ')){
+        if(!isValidTerm(term)) continue;
+        if(!insert(term, doc_info)) return false;
     }
     return true;
 }

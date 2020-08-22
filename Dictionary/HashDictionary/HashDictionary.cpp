@@ -1,8 +1,4 @@
 #include "HashDictionary.hpp"
-#include <iostream>
-#include <fstream>
-#include <sstream>
-
 
 HashDictionary::HashDictionary(){
     table.assign(table_size, nullptr);

@@ -3,12 +3,10 @@
 
 #include "Document.hpp"
 #include <vector>
-#include <set>
 
 class DocumentHeap{
 private:
     std::vector<Document*> documents;
-    std::set<size_t> docs_included;
     size_t MAX_SIZE = 0;
     size_t _size = 0;
 

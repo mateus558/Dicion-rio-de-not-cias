@@ -2,9 +2,6 @@
 #define HASH_DICTIONARY_HPP_INCLUDED
 
 #include "Dictionary.hpp"
-#include <string>
-#include <vector>
-#include <list>
 
 using json = nlohmann::json;
 
