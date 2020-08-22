@@ -15,7 +15,7 @@ bool TRIEDictionary::insert(const std::string& word, Document* doc_info){
         char c = *it;
         if(c == ' ') continue;
 
-        if(c >= 48 && c <= 57){
+        if(c >= '0' && c <= '9'){
             size_t key = c - '0';
             if(!current->children_list){
                 current->children_list = new ChildrenList;
@@ -112,7 +112,7 @@ DictNode* TRIEDictionary::find(const std::string& word){
     for(auto it = word.begin(); it != word.end(); it++){
         char c = *it;
         if(c == ' ') continue;
-        if(c >= 48 && c <= 57){
+        if(c >= '0' && c <= '9'){
             size_t key = c - '0';
             if(!current->children_list){
                 return nullptr;

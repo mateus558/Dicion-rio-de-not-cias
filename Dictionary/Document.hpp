@@ -5,6 +5,7 @@
 
 struct Document {
     size_t id = 0;
+    int heap_id = -1;
     double rank = 0.0;
     size_t unique_terms = 0;
     std::string category;

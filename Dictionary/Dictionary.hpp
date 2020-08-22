@@ -2,6 +2,7 @@
 #define DICTIONARY_HPP_INCLUDED
 
 #include "DictNode.hpp"
+#include "DocumentHeap.hpp"
 #include "../Utils/json.hpp"
 #include "../Utils/gnuplot-iostream.h"
 #include "../Utils/utils.hpp"
@@ -42,7 +43,7 @@ public:
     void generatePlots(const std::string& strategy);
 
     virtual DictNode* find(const std::string& word) = 0;
-    virtual std::vector<Document*> findByTerms(const std::string& terms);
+    virtual DocumentHeap* findByTerms(const std::string& terms);
     virtual bool insert(const std::string& word, Document* doc_info) = 0;
     virtual bool insert(const json& document);
     virtual bool insert(const std::string& path);

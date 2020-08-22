@@ -37,7 +37,7 @@ int main(int argc, char* argv[]){
     }
 
     while(true){
-        clear();
+        //clear();
 
         std::clog << "Number of documents: " << dict->getNumberOfDocuments() << std::endl;
         std::clog << "Number of distinct terms: " << dict->distinctTerms() << std::endl;
@@ -47,13 +47,15 @@ int main(int argc, char* argv[]){
         std::getline(std::cin, search_terms);
 
         auto search_results = dict->findByTerms(search_terms);
-        if(search_results.empty()) return 1;
-
-        for(size_t i = 0; i < search_results.size(); i++){
-            std::cout << "Document: " << search_results[i]->id << " Rank: " << search_results[i]->rank << std::endl;
-            std::cout << "Headline: " << search_results[i]->headline << std::endl;
-            std::cout << "Short description: " << search_results[i]->short_description << std::endl;
-            std::cout << "Link: " << search_results[i]->link << std::endl;
+        if(!search_results->size()) return 1;
+        size_t id = 0;
+        while(!search_results->empty()){
+            auto news = search_results->pop();
+            id++;
+            std::cout << "[" << id << "] Document: " << news->id << " Rank: " << news->rank << std::endl;
+            std::cout << "Headline: " << news->headline << std::endl;
+            std::cout << "Short description: " << news->short_description << std::endl;
+            std::cout << "Link: " << news->link << std::endl;
             std::cout << std::endl;
             std::cout << "---------------------------------------------------------------------------------\n";
             std::cout << std::endl;

@@ -70,8 +70,9 @@ std::vector<duration<float> > time_experiment(const std::string &path, const siz
 		//std::cout << "Strategy: " << strategy << std::endl;
 		//std::clog << "Processing query with " << n_terms << " terms [" << i+1 << "/" << queries.size() << "]" << std::endl;
 		auto start = high_resolution_clock::now(); 
-		_dict->findByTerms(queries[i]);
+		auto results = _dict->findByTerms(queries[i]);
 		auto stop = high_resolution_clock::now();
+		delete results;
 		(*avg_comparisons) += _dict->numberComparisons(); 
 		durations.push_back(stop - start); 
 	}

@@ -63,36 +63,39 @@ void Dictionary::generatePlots(const std::string& strategy){
 }
 
 std::string Dictionary::processString(const std::string& str){
-    std::string clean_str;
+    std::string clean_str, nopunct;
 
     clean_str.resize(str.size());
-
     std::transform(str.begin(),str.end(), clean_str.begin(), [this](unsigned char c){
-        if(c <= 122 && c >= 97) return c;
-        if(c >= 65 && c <= 90) return (unsigned char)(c+32);
-        if(c >= 48 && c <= 57) return c;
-        if(std::ispunct(c)) return (unsigned char)' ';
+        if(c <= 122 && c >= 97) return (char)c;
+        if(c >= 65 && c <= 90) return (char)(c+32);
+        if(c >= 48 && c <= 57) return (char)c;
+        if(c == '-') return ' ';
+        if(std::ispunct(c)) return (char)'.';
         if(char_translator.find(c) != char_translator.end()){
-            return (unsigned char)char_translator[c];
-        }    
-        return (unsigned char)' ';
+            return (char)char_translator[c];
+        }
+        if(c == 195 || c == 197 || c == 225) return '.';
+        if(c == 196) return 'i';
+        return (char)' ';
     });
+    clean_str.erase(std::remove(clean_str.begin(), clean_str.end(), '.'), clean_str.end());
+
     return clean_str;
 }
 
-std::vector<Document*> Dictionary::findByTerms(const std::string& terms){
+DocumentHeap* Dictionary::findByTerms(const std::string& terms){
     std::string term, clean_terms = processString(terms);
     std::stringstream input_stringstream(clean_terms);
-    std::vector<Document*> results(20, nullptr);
-    std::priority_queue<Document*, std::vector<Document*>, DocumentRankCompare> heap;
+    DocumentHeap *heap = new DocumentHeap(20);
 
     size_t n_terms = 0;
     while(std::getline(input_stringstream, term, ' ')){
-        if(term.size() == 1 || term.empty()) continue;
+        if((term[0] >= '0' && term[0] <= '9') || (term.size() == 1 || term.empty())) continue;
         n_terms++;
         if(n_terms > 2){
             std::cerr << "Error: too many terms for search. [Only 2 allowed]" << std::endl;
-            return std::vector<Document*>();
+            return nullptr;
         }
         auto search_result = find(term);
         if(!search_result) continue;
@@ -102,41 +105,19 @@ std::vector<Document*> Dictionary::findByTerms(const std::string& terms){
             double rank = ((double)1.0/documents[id]->unique_terms)*search_result->weight_i[id];
             documents[id]->rank += rank;
             if(rank != 0){
-                heap.push(documents[id]);
+                heap->insertOrUpdate(documents[id]);
             }
         }
     }
 
-    std::set<size_t> indexes;
-    size_t count = 0;
-    while(!heap.empty() && count < 20){
-        auto res = heap.top();
-        heap.pop();
-        if(indexes.find(res->id) == indexes.end()){
-            results[count] = res;
-            count++;
-            indexes.insert(res->id);
+    size_t i = 0;
+    while(heap->size() < 20){
+        if(documents[i]->rank == 0){
+            heap->insertOrUpdate(documents[i]);
         }
+        i++;
     }
-
-    std::sort(results.begin(),results.end(), [](Document* a, Document *b){
-        if(!a && !b) return false;
-        if(a && !b) return true;
-        if(!a && b) return false;
-        return a->rank > b->rank;
-    });
-
-    size_t j = 0;
-    for(size_t i = count; i < results.size(); i++){
-        if(!results[i]){
-            j++;
-            while(j < documents.size() && documents[j]->rank > 0){
-                j++;
-            }
-            results[i] = documents[j];
-        }
-    }
-    return results;
+    return heap;
 }
 
 bool Dictionary::insert(const json& document){
@@ -151,9 +132,8 @@ bool Dictionary::insert(const json& document){
     
     std::string clean_input = processString(input);
     std::stringstream input_stringstream(clean_input);
-
     while(std::getline(input_stringstream, parsed, ' ')){
-        if(parsed.size() == 1 || parsed.empty()) continue;
+        if((parsed[0] >= '0' && parsed[0] <= '9') || (parsed.size() == 1 || parsed.empty())) continue;
         if(!insert(parsed, doc_info)) return false;
     }
     return true;
