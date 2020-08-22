@@ -22,6 +22,7 @@ class Dictionary {
 protected:
     bool verbose = true;
     bool print_frequency = true;
+    bool mem_plot_generated = false;
     size_t distinct_terms = 0;
     size_t print_limit = 0;
     size_t comparisons = 0;
@@ -29,6 +30,8 @@ protected:
     std::map<unsigned char, char> char_translator;
     std::vector<std::pair<double,double> > time_measures;
     std::vector<std::pair<double, double> > mem_measures;
+    Gnuplot gp;
+    DocumentHeap *heap = nullptr;
 
     virtual void computeTermsParameters() = 0;
     bool isValidTerm(const std::string& term);
@@ -47,7 +50,7 @@ public:
     void generatePlots(const std::string& strategy);
 
     virtual DictNode* find(const std::string& word) = 0;
-    virtual DocumentHeap* findByTerms(const std::string& terms);
+    virtual std::vector<Document*> findByTerms(const std::string& terms, const size_t &n_results);
     virtual bool insert(const std::string& word, Document* doc_info) = 0;
     virtual bool insert(const json& document);
     virtual bool insert(const std::string& path);

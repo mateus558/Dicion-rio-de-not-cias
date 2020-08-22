@@ -11,3 +11,5 @@ echo "Copying executables to project main folder..."
 echo
 cp Experiments/exp ..
 cp CLI/news_index ..
+cd ..
+gdb ./news_index

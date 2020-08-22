@@ -66,13 +66,9 @@ std::vector<duration<float> > time_experiment(const std::string &path, const siz
 	Gnuplot gp;
 
 	for(size_t i = 0; i < queries.size(); i++){
-		//clear();
-		//std::cout << "Strategy: " << strategy << std::endl;
-		//std::clog << "Processing query with " << n_terms << " terms [" << i+1 << "/" << queries.size() << "]" << std::endl;
 		auto start = high_resolution_clock::now(); 
-		auto results = _dict->findByTerms(queries[i]);
+		_dict->findByTerms(queries[i], 20);
 		auto stop = high_resolution_clock::now();
-		delete results;
 		(*avg_comparisons) += _dict->numberComparisons(); 
 		durations.push_back(stop - start); 
 	}
@@ -92,7 +88,7 @@ std::vector<duration<float> > time_experiment(const std::string &path, const siz
 	gp << "set terminal svg" << std::endl;
 	gp << "set output 'queries_time_" << n_terms << "_terms_plot_" << strategy << ".svg'" << std::endl;
 	gp << "set xlabel 'Number of queries'" << std::endl;
-	gp << "set ylabel 'Time (microsecs)'" << std::endl;
+	gp << "set ylabel 'Time (\xC2\xB5s)'" << std::endl;
 	gp << "plot" << gp.file1d(plot_data) << "with lines title 'avg query time'" << std::endl;
 	return durations;
 }
@@ -129,6 +125,8 @@ int main(int argc, char* argv[]){
 	auto end = std::chrono::high_resolution_clock::now();
 	time_fill_dict = end - start;
 	auto insert_times = to_exp->getTimeMeasurements();
+	std::clog << "Generating plots for insertion time at each 20000 documents..." << std::endl;
+	to_exp->generatePlots(strategy);
 	
 	process_mem_usage(vm, rss);
 	
@@ -146,10 +144,14 @@ int main(int argc, char* argv[]){
 	avg_time1 /= n_queries;
 	clear();
 	std::cout << "Strategy: " << strategy << std::endl;
+	double avg_insert_time = 0.0;
 	for(size_t i = 0; i < insert_times.size(); i++) {
-		std::cout << "Time to insert " << insert_times[i].first << "/" << to_exp->getNumberOfDocuments() << ": " << insert_times[i].second << " seconds" <<  std::endl;
+		std::cout << "Time to insert " << insert_times[i].first << "/" << to_exp->getNumberOfDocuments() << ": " << insert_times[i].second << " ms" <<  std::endl;
+		avg_insert_time += insert_times[i].second;
 	}
+	avg_insert_time /= (double)insert_times.size();
 	std::clog << "-------------------------------------------------------------------------------\n";
+	std::clog << "Average insertion time: " << avg_insert_time << "ms" << std::endl;
 	std::clog << "Time to construct the dictionary: " << time_fill_dict.count() << "s" << std::endl;
 	std::clog << "Memory used by the dictionary VM: " << vm/1024 << " RSS: " << rss/1024 << " (Mb)" << std::endl;
 	std::clog << "Average query time with 1 term: " << avg_time * 1E6 << " \xC2\xB5s" << std::endl;
@@ -157,6 +159,7 @@ int main(int argc, char* argv[]){
 	std::clog << "Average comparisons with 1 term: " << avg_comparisons1  << std::endl;
 	std::clog << "Average comparisons with 2 terms: " << avg_comparisons2 << std::endl;
 	std::clog << "Average term size: " << avg_term_size << std::endl;
-	to_exp->generatePlots(strategy);
+	
+	delete to_exp;
 	return 0;   
 }

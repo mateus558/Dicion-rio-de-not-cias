@@ -45,13 +45,12 @@ int main(int argc, char* argv[]){
         std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
         std::getline(std::cin, search_terms);
 
-        auto search_results = dict->findByTerms(search_terms);
-        if(!search_results->size()) return 1;
-        size_t id = 0;
-        while(!search_results->empty()){
-            auto news = search_results->pop();
-            id++;
-            std::cout << "[" << id << "] Document: " << news->id << " Rank: " << news->rank << std::endl;
+        auto search_results = dict->findByTerms(search_terms, 20);
+        if(search_results.empty()) return 1;
+        
+        for(size_t i = 0, id = 0; i < search_results.size(); i++, ++id){
+            auto news = search_results[i];
+            std::cout << "[" << id+1 << "] Document: " << news->id << " Rank: " << news->rank << std::endl;
             std::cout << "Headline: " << news->headline << std::endl;
             std::cout << "Short description: " << news->short_description << std::endl;
             std::cout << "Link: " << news->link << std::endl;

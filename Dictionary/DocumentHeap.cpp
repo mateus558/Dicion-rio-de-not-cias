@@ -87,7 +87,6 @@ Document* DocumentHeap::pop(){
 
 DocumentHeap::~DocumentHeap(){
     for(size_t i = 0; i < documents.size(); i++){
-        documents[i]->heap_id = -1;
+        if(documents[i]) documents[i]->heap_id = -1;
     }
-    documents.clear();
 }

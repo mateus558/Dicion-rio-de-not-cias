@@ -209,7 +209,4 @@ std::ostream & operator << (std::ostream &out, TRIEDictionary &dict)
 
 TRIEDictionary::~TRIEDictionary(){
     delete root;
-    for(size_t i = 0; i < documents.size(); i++){
-        delete documents[i];
-    }
 }
