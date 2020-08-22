@@ -2,3 +2,4 @@ build
 build/*
 exp
 news_index
+*.svg
