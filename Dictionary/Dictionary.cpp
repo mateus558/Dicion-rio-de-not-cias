@@ -62,6 +62,10 @@ bool Dictionary::isValidTerm(const std::string& term){
     return true;
 }
 
+void Dictionary::addToDocsCounts(Document* doc, DictNode* node){
+   node->docs_counts->insertOrCount(doc);
+}
+
 
 std::string Dictionary::normalizeString(const std::string& str){
     std::string clean_str, nopunct;
@@ -99,7 +103,7 @@ std::vector<Document*> Dictionary::findByTerms(const std::string& terms, const s
     std::string term, clean_terms = normalizeString(terms);
     std::stringstream input_stringstream(clean_terms);
     // initialize the results array and the heap for the results
-    std::vector<Document*> results(n_results, nullptr);
+    std::vector<Document*> results((n_results > documents.size())?documents.size():n_results, nullptr);
     heap = new DocumentHeap(n_results);
 
     size_t n_terms = 0;
@@ -118,23 +122,17 @@ std::vector<Document*> Dictionary::findByTerms(const std::string& terms, const s
         // count the number of comparisons
         n_comparisons += this->numberComparisons();
         if(!search_result) continue;
-        // compute the documents rank and add it to the heap
-        for(auto it = search_result->docs_counts.begin(); it != search_result->docs_counts.end(); it++){
-            auto id = (*it).first->id;
-            if(!documents[id]->unique_terms) continue;
-            double rank = ((double)1.0/documents[id]->unique_terms)*search_result->weight_i[id];
-            documents[id]->rank += rank;
-            // only add the document to the heap if its rank is different from zero or if it was updated
-            if(rank != 0){
-                heap->insertOrUpdate(documents[id]);
-            }
+        // compute the documents ranks and add then to the heap
+        std::vector<Document*> ranked_docs = search_result->docs_counts->computeRanks();
+        for(size_t i = 0; i < ranked_docs.size(); i++){
+            if(ranked_docs[i] && ranked_docs[i]->rank > 0) heap->insertOrUpdate(ranked_docs[i]);
         }
     }
     comparisons = n_comparisons;
 
-    // get the documents with bigger rank and add it to the results array
+    // get the documents with biggest ranks and add then to the results array
     size_t i = 0;
-    while(!heap->empty()){
+    while(i < results.size() && !heap->empty()){
         results[i] = heap->pop();
         i++;
     }

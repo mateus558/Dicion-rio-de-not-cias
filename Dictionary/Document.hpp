@@ -41,8 +41,15 @@ struct DocumentCompare
 {
    bool operator() (const Document* lhs, const Document* rhs) const
    {
-       return lhs->unique_terms < rhs->unique_terms;
+       return lhs->id < rhs->id;
    }
+};
+
+struct DocumentHash {
+public:
+    size_t operator()(const Document * doc) const {
+        return doc->id;
+    }
 };
 
 struct DocumentRankCompare

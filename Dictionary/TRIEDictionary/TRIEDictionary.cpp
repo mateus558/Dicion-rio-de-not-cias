@@ -81,7 +81,8 @@ bool TRIEDictionary::insert(const std::string& word, Document* doc_info){
     current->end = true;
     
     // update number of occurrences of the word in the document
-    current->docs_counts[doc_info]++;
+    addToDocsCounts(doc_info, current);
+    //current->docs_counts[doc_info]++;
 
     return true;
 }
@@ -97,16 +98,14 @@ void TRIEDictionary::computeTermsParameters_helper(TrieNode* root, int *j){
 
     // if it's the end of a word, compute it's weights
     if(current->end){
-        auto n_docs = current->docs_counts.size();
+        auto n_docs = current->docs_counts->size();
         if(verbose){
             (*j)++; 
             std::clog << "Computing the weights of the term " << *j << std::endl;
         }
         if(n_docs){
-            // go through the list of documents updating the word weights
-            for(auto it = current->docs_counts.begin(); it != current->docs_counts.end(); it++){
-                current->weight_i[(*it).first->id] = (*it).second*(log2(documents.size())/n_docs);
-            }
+            // go through the list of documents computing the word weights
+            current->docs_counts->computeWeights(documents.size());
         }
     }
 
@@ -213,29 +212,25 @@ std::vector<WordInfo> TRIEDictionary::transverse(){
     return words_info;
 }
 
-std::ostream & operator << (std::ostream &out, TRIEDictionary &dict) 
-{ 
-    std::vector<WordInfo> infos = dict.transverse();
+void TRIEDictionary::print(){ 
+    std::vector<WordInfo> infos = transverse();
     std::vector<WordInfo>::iterator end;
-    if(dict.print_limit > infos.size() || dict.print_limit == 0){
+    if(print_limit > infos.size() || print_limit == 0){
         end = infos.end();
     }else{
-        end = infos.begin() + dict.print_limit;
+        end = infos.begin() + print_limit;
     }
 
     // print a list of words in alphabet order and its docs list
     for(auto it = infos.begin(); it != end; ++it){
-        out << (*it).first;
-        if(dict.print_frequency){
-            for(auto it1 = (*it).second->docs_counts.begin(); it1 != (*it).second->docs_counts.end(); it1++){
-                out << " (" << (*it1).second << ", " << (*it1).first->id << ")"; 
-            }
+        std::cout << (*it).first;
+        if(print_frequency){
+            (*it).second->docs_counts->print();
         }
-        out << std::endl;
-    }
-    return out; 
+        std::cout << std::endl;
+    } 
 } 
 
 TRIEDictionary::~TRIEDictionary(){
-    delete root;
+    if(root) delete root;
 }

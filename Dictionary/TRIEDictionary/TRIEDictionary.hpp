@@ -10,6 +10,7 @@ using json = nlohmann::json;
 struct TrieNode;
 
 struct ChildrenList{
+    // indicates for with number this node belongs
     size_t key = 0;
     TrieNode* node = nullptr;
     ChildrenList* next = nullptr;
@@ -43,13 +44,17 @@ public:
     }
 
     ~TrieNode(){
+        // dealocate array of children chars
         for(size_t i = 0; i < 26; i++){
             if(children && children[i]) delete children[i];
         }
+        if(children) delete[] children;
+
+        // dealocate list of children numbers 
         auto curr = children_list;
         while(curr){
             auto next = curr->next;
-            delete curr;
+            if(curr) delete curr;
             curr = next;
         }
     }
@@ -89,10 +94,8 @@ public:
 
     DictNode* find(const std::string& word) override;
     bool insert(const std::string& word, Document* doc_info) override;
-
+    void print() override;
     ~TRIEDictionary();
-
-    friend std::ostream & operator << (std::ostream &out, TRIEDictionary &dict);
 };
 
 

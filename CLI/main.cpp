@@ -38,8 +38,7 @@ int main(int argc, char* argv[]){
     }
 
     while(true){
-        clear();
-
+        
         std::clog << "Number of documents: " << dict->getNumberOfDocuments() << std::endl;
         std::clog << "Number of distinct terms: " << dict->distinctTerms() << std::endl;
         std::clog << "\n-------------------------------------------------------------------\n\n";
@@ -54,6 +53,7 @@ int main(int argc, char* argv[]){
         
         // show results info in the console
         for(size_t i = 0, id = 0; i < search_results.size(); i++, ++id){
+            if(!search_results[i]) continue;
             auto news = search_results[i];
             std::cout << "[" << id+1 << "] Document: " << news->id << " Rank: " << news->rank << std::endl;
             std::cout << "Headline: " << news->headline << std::endl;
@@ -72,4 +72,5 @@ int main(int argc, char* argv[]){
         }
     }
     waitUserAction();
+    delete dict;
 }

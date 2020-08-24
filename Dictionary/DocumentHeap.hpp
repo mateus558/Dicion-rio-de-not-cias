@@ -11,10 +11,8 @@ class DocumentHeap{
 private:
     /// heap array of document
     std::vector<Document*> documents;
-    /// maximum number of elements in the heap
-    size_t MAX_SIZE = 0;
     /// actual number of elements in the heap
-    size_t _size = 0;
+    size_t _size = 0, max_size = 0;
 
     /**
      *  \brief Move the node up in the tree

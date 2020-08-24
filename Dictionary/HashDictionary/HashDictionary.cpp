@@ -46,7 +46,8 @@ bool HashDictionary::insert(const std::string& word, Document* doc_info){
         distinct_terms++;
     }
     // count the number of occurrences of the word in the document
-    table[key]->docs_counts[doc_info]++;
+    addToDocsCounts(doc_info, table[key]);
+    //table[key]->docs_counts[doc_info]++;
 
     return true;
 }
@@ -57,19 +58,50 @@ void HashDictionary::computeTermsParameters(){
     for(auto it = table.begin(); it != table.end(); it++){
         auto term = (*it);
         if(!term) continue;
-        auto n_docs = term->docs_counts.size();
+        auto n_docs = term->docs_counts->size();
         if(verbose){
             i++; 
             std::clog << "Computing the weights of the term " << i << std::endl;
         }
         if(n_docs){
             // go through the list of documents of the term and compute the term weight for each document
-            for(auto it = term->docs_counts.begin(); it != term->docs_counts.end(); it++){
+            term->docs_counts->computeWeights(documents.size());
+            /*for(auto it = term->docs_counts.begin(); it != term->docs_counts.end(); it++){
                 term->weight_i[(*it).first->id] = (*it).second*(log2(documents.size())/n_docs);
-            }
+            }*/
         }
     }
 }
+
+void HashDictionary::print(){ 
+    std::vector<Term*> to_output((print_limit)?print_limit:table.size(), nullptr);
+
+    for(size_t i = 0, j = 0; i < table.size(); i++){
+        auto entry = table[i];
+        if((print_limit != 0) && (j == print_limit)){
+            break;
+        }
+        if(!entry) continue;
+        to_output[j] = entry;
+        j++;
+    }
+    std::sort(to_output.begin(), to_output.end(), [](const Term* a, const Term* b){
+        if(!a && !b) return false;
+        if(!a && b) return false;
+        if(a && !b) return true;
+        return (a->value.compare(b->value) < 0)?true:false;
+    });
+
+    // print a list of words in alphabet order and its docs list
+    for(auto it = to_output.begin(); it != to_output.end(); it++){
+        if(!(*it)) continue;
+        std::cout << (*it)->value;
+        if(print_frequency){
+            (*it)->docs_counts->print();
+        }
+        std::cout << std::endl;
+    }
+} 
 
 HashDictionary::~HashDictionary(){
     for(auto it = table.begin(); it != table.end(); it++){

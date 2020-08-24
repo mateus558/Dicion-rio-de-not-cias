@@ -1,9 +1,9 @@
 #include "DocumentHeap.hpp"
 
 DocumentHeap::DocumentHeap(const size_t max_size){
-    this->MAX_SIZE = max_size;
+    this->max_size = max_size;
     // initialize the heap with null entries
-    this->documents.assign(MAX_SIZE, nullptr);
+    this->documents.assign(max_size , nullptr);
 }
 
 void DocumentHeap::up(size_t child){ 
@@ -71,7 +71,10 @@ bool DocumentHeap::update(Document* doc){
 
 bool DocumentHeap::insertOrUpdate(Document* doc){
     if(!doc) return false;
-    if(_size == MAX_SIZE) return false;
+    if(_size == max_size){
+        max_size *= 2;
+        documents.resize(max_size, nullptr);
+    }
     // if the document is already in the heap, update it
     if(doc->heap_id > -1){
         return update(doc); 
@@ -86,7 +89,7 @@ bool DocumentHeap::insertOrUpdate(Document* doc){
 }
 
 Document* DocumentHeap::pop(){ 
-    if(!_size) return nullptr;
+    if(_size == 0) return nullptr;
     // reset heap index
     documents[0]->heap_id = -1;
     auto begin = documents[0];

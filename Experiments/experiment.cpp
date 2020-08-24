@@ -94,6 +94,7 @@ std::vector<duration<float> > time_experiment(const std::string &path, const siz
 	std::vector<duration<float> > durations;
 	std::vector<std::pair<double, double> > plot_data;
 	Gnuplot gp;
+	std::cout << "Experimenting queries with " << n_terms << " term..." << std::endl;
 
 	// measure the time for each query and compute the average number of comparisons
 	for(size_t i = 0; i < queries.size(); i++){
@@ -111,7 +112,7 @@ std::vector<duration<float> > time_experiment(const std::string &path, const siz
 	double avg = 0.0;
 	for(size_t i = 0; i < durations.size(); i++){
 		if(i%step == 0){
-			plot_data.push_back(std::make_pair(i, (avg/step)*1E6));
+			plot_data.push_back(std::make_pair(i, (avg/step)*1E3));
 			avg = 0.0;
 		}
 		avg += durations[i].count();
@@ -120,7 +121,7 @@ std::vector<duration<float> > time_experiment(const std::string &path, const siz
 	gp << "set terminal svg" << std::endl;
 	gp << "set output 'queries_time_" << n_terms << "_terms_plot_" << strategy << ".svg'" << std::endl;
 	gp << "set xlabel 'Number of queries'" << std::endl;
-	gp << "set ylabel 'Time (\xC2\xB5s)'" << std::endl;
+	gp << "set ylabel 'Time (ms)'" << std::endl;
 	gp << "plot" << gp.file1d(plot_data) << "with lines title 'avg query time'" << std::endl;
 	return durations;
 }
@@ -200,8 +201,8 @@ int main(int argc, char* argv[]){
 	std::clog << "Average insertion time: " << avg_insert_time << "ms" << std::endl;
 	std::clog << "Time to construct the dictionary: " << time_fill_dict.count() << "s" << std::endl;
 	std::clog << "Memory used by the dictionary VM: " << vm/1024 << " RSS: " << rss/1024 << " (Mb)" << std::endl;
-	std::clog << "Average query time with 1 term: " << avg_time * 1E6 << " \xC2\xB5s" << std::endl;
-	std::clog << "Average query time with 2 terms: " << avg_time1 * 1E6 << " \xC2\xB5s" << std::endl;
+	std::clog << "Average query time with 1 term: " << avg_time * 1E3 << " ms" << std::endl;
+	std::clog << "Average query time with 2 terms: " << avg_time1 * 1E3 << " ms" << std::endl;
 	std::clog << "Average comparisons with 1 term: " << avg_comparisons1  << std::endl;
 	std::clog << "Average comparisons with 2 terms: " << avg_comparisons2 << std::endl;
 	std::clog << "Average term size: " << avg_term_size << std::endl;

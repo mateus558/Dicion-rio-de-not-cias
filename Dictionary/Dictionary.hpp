@@ -2,11 +2,13 @@
 #define DICTIONARY_HPP_INCLUDED
 
 #include "DocumentHeap.hpp"
+#include "DocumentCounterAVL.hpp"
 #include "../Utils/json.hpp"
 #include "../Utils/utils.hpp"
 
 #include <map>
 #include <chrono>
+#include <unordered_map>
 
 using json = nlohmann::json;
 using namespace std::chrono;
@@ -19,7 +21,16 @@ public:
     // maps from the document id to the term weight in it
     std::map<size_t, double> weight_i;
     // maps from the document, using the number of unique terms, to the number of occurrences of the term in the document
-    std::map<Document*, size_t, DocumentCompare> docs_counts;
+    DocumentCounterAVL *docs_counts;
+    //std::map<Document*, size_t, DocumentCompare> docs_counts;
+
+    DictNode(){ 
+        docs_counts = new DocumentCounterAVL();
+    }
+
+    virtual ~DictNode(){ 
+        delete docs_counts;
+    }
 };
 
 /**
@@ -54,6 +65,8 @@ protected:
      * \return int
      */
     virtual void computeTermsParameters() = 0;
+
+    void addToDocsCounts(Document* doc, DictNode *node);
     
 public:
     Dictionary();
@@ -147,6 +160,7 @@ public:
      */
     friend void generatePlots(Dictionary* dictionary, const std::string &strategy);
 
+    virtual void print() = 0;
     virtual ~Dictionary(){ 
         for(size_t i = 0; i < documents.size(); i++){
             if(documents[i]) delete documents[i];

@@ -33,8 +33,9 @@ public:
 
     DictNode* find(const std::string& word) override;
     bool insert(const std::string& word, Document* doc_info) override;
-    
+    void print() override;
     ~HashDictionary();
+    friend std::ostream & operator << (std::ostream &out, HashDictionary &dict);
 };
 
 #endif
