@@ -8,7 +8,7 @@ TRIEDictionary::TRIEDictionary(){
 
 bool TRIEDictionary::insert(const std::string& word, Document* doc_info){
     auto current = this->root;
-
+    if(word.size() < 3) return false;
     // go through each word char ignoring spaces and add the word to the TRIE
     for(auto it = word.begin(); it != word.end(); it++){
         char c = *it;
@@ -98,14 +98,14 @@ void TRIEDictionary::computeTermsParameters_helper(TrieNode* root, int *j){
 
     // if it's the end of a word, compute it's weights
     if(current->end){
-        auto n_docs = current->docs_counts->size();
+        auto n_docs = current->size();
         if(verbose){
             (*j)++; 
             std::clog << "Computing the weights of the term " << *j << std::endl;
         }
         if(n_docs){
             // go through the list of documents computing the word weights
-            current->docs_counts->computeWeights(documents.size());
+            current->computeWeights(documents.size());
         }
     }
 
@@ -225,7 +225,7 @@ void TRIEDictionary::print(){
     for(auto it = infos.begin(); it != end; ++it){
         std::cout << (*it).first;
         if(print_frequency){
-            (*it).second->docs_counts->print();
+            (*it).second->print();
         }
         std::cout << std::endl;
     } 

@@ -22,13 +22,19 @@ void generatePlots(Dictionary* dictionary, const std::string &strategy){
     gp << "set xlabel 'Number of documents'" << std::endl;
     gp << "set ylabel 'Memory (Mb)'" << std::endl;
     gp << "plot" << gp.file1d(dictionary->mem_measures) << "with lines title 'Virtual memory'" << std::endl;
-	
+	std::string fname = "mem_"+strategy;
+	if(!save_dataset(dictionary->mem_measures.begin(), dictionary->mem_measures.end(), fname)){
+		std::cerr << "Could not save the mem dataset for the strategy " << strategy << std::endl;
+	}
 	// plot the average time of the dictionary at each 20000 documents insertion
     gp << "set output 'insertion_time_plot_" << strategy << ".svg'" << std::endl;
     gp << "set xlabel 'Number of documents'" << std::endl;
     gp << "set ylabel 'Time (ms)'" << std::endl;
     gp << "plot" << gp.file1d(dictionary->time_measures) << "with lines title 'avg insertion time'" << std::endl;
-    
+    fname = "time_"+strategy;
+	if(!save_dataset(dictionary->time_measures.begin(), dictionary->time_measures.end(), fname)){
+		std::cerr << "Could not save the time dataset for the strategy " << strategy << std::endl;
+	}
     dictionary->mem_measures.clear();
     dictionary->time_measures.clear();
 }
@@ -92,6 +98,7 @@ std::vector<duration<float> > time_experiment(const std::string &path, const siz
 	// generate random queries with the given number of terms
 	std::vector<std::string> queries = generateRandomQueries(path, n_queries, n_terms);
 	std::vector<duration<float> > durations;
+	duration<float> total_time;
 	std::vector<std::pair<double, double> > plot_data;
 	Gnuplot gp;
 	std::cout << "Experimenting queries with " << n_terms << " term..." << std::endl;
@@ -102,10 +109,11 @@ std::vector<duration<float> > time_experiment(const std::string &path, const siz
 		_dict->findByTerms(queries[i], 20);
 		auto stop = high_resolution_clock::now();
 		(*avg_comparisons) += _dict->numberComparisons(); 
+		total_time += stop - start;
 		durations.push_back(stop - start); 
 	}
 	(*avg_comparisons) /= queries.size();
-	
+	std::cout << "Total queries time:" << total_time.count() << std::endl; 
 	std::clog << "Generating time plot for queries with " << n_terms << " terms..." << std::endl;
 	std::clog << "Average number of comparisons: " << (*avg_comparisons) << std::endl;
 	// prepare time data for ploting and compute the average query time
@@ -123,6 +131,10 @@ std::vector<duration<float> > time_experiment(const std::string &path, const siz
 	gp << "set xlabel 'Number of queries'" << std::endl;
 	gp << "set ylabel 'Time (ms)'" << std::endl;
 	gp << "plot" << gp.file1d(plot_data) << "with lines title 'avg query time'" << std::endl;
+	std::string fname = "time_queries_"+std::to_string(n_terms)+ "_" + strategy;
+	if(!save_dataset(plot_data.begin(), plot_data.end(), fname)){
+		std::cerr << "Failed to save dataset of time queries with " << n_terms << " for strategy " << strategy << std::endl;
+	}
 	return durations;
 }
 
@@ -186,7 +198,7 @@ int main(int argc, char* argv[]){
 	avg_time /= n_queries;
 	avg_time1 /= n_queries;
 	
-	clear();
+	//clear();
 	std::cout << "Strategy: " << strategy << std::endl;
 	
 	// compute the average insertion time
@@ -206,6 +218,7 @@ int main(int argc, char* argv[]){
 	std::clog << "Average comparisons with 1 term: " << avg_comparisons1  << std::endl;
 	std::clog << "Average comparisons with 2 terms: " << avg_comparisons2 << std::endl;
 	std::clog << "Average term size: " << avg_term_size << std::endl;
+	if(strategy == "hash") std::clog << "Load factor: " << (double)to_exp->distinctTerms()/113989 << std::endl;
 	
 	delete to_exp;
 	return 0;   

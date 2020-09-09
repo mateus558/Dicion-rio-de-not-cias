@@ -2,7 +2,7 @@
 #define DICTIONARY_HPP_INCLUDED
 
 #include "DocumentHeap.hpp"
-#include "DocumentCounterAVL.hpp"
+#include "DictNode.hpp"
 #include "../Utils/json.hpp"
 #include "../Utils/utils.hpp"
 
@@ -13,25 +13,6 @@
 using json = nlohmann::json;
 using namespace std::chrono;
 
-/**
- * \brief Base class for the document dictionary node
- */
-class DictNode{
-public:
-    // maps from the document id to the term weight in it
-    std::map<size_t, double> weight_i;
-    // maps from the document, using the number of unique terms, to the number of occurrences of the term in the document
-    DocumentCounterAVL *docs_counts;
-    //std::map<Document*, size_t, DocumentCompare> docs_counts;
-
-    DictNode(){ 
-        docs_counts = new DocumentCounterAVL();
-    }
-
-    virtual ~DictNode(){ 
-        delete docs_counts;
-    }
-};
 
 /**
  * \brief Base class for the document dictionary

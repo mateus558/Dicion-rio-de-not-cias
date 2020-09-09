@@ -36,9 +36,11 @@ int main(int argc, char* argv[]){
         std::cerr << "Error loading the dataset!" << std::endl;
         return 1;
     }
-
+    double vm, rss;
+    process_mem_usage(vm, rss);
     while(true){
-        
+        clear();
+        std::clog << "Memory used by the dictionary VM: " << vm/1024 << " RSS: " << rss/1024 << " (Mb)" << std::endl;
         std::clog << "Number of documents: " << dict->getNumberOfDocuments() << std::endl;
         std::clog << "Number of distinct terms: " << dict->distinctTerms() << std::endl;
         std::clog << "\n-------------------------------------------------------------------\n\n";

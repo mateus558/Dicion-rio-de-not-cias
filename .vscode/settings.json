@@ -64,6 +64,11 @@
         "cfenv": "cpp",
         "bitset": "cpp",
         "typeindex": "cpp",
-        "variant": "cpp"
+        "variant": "cpp",
+        "csignal": "cpp",
+        "unordered_set": "cpp",
+        "rope": "cpp",
+        "slist": "cpp",
+        "future": "cpp"
     }
 }

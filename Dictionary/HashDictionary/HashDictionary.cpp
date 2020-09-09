@@ -39,7 +39,7 @@ bool HashDictionary::insert(const std::string& word, Document* doc_info){
         key++;
     }
     if(!table[key]){
-        table[key] = new Term();
+        table[key] = new HashNode();
         table[key]->value = word;
         // update the number of unique terms in the document and dictionary if the position is empty
         doc_info->unique_terms++;
@@ -58,23 +58,20 @@ void HashDictionary::computeTermsParameters(){
     for(auto it = table.begin(); it != table.end(); it++){
         auto term = (*it);
         if(!term) continue;
-        auto n_docs = term->docs_counts->size();
+        auto n_docs = term->size();
         if(verbose){
             i++; 
             std::clog << "Computing the weights of the term " << i << std::endl;
         }
         if(n_docs){
             // go through the list of documents of the term and compute the term weight for each document
-            term->docs_counts->computeWeights(documents.size());
-            /*for(auto it = term->docs_counts.begin(); it != term->docs_counts.end(); it++){
-                term->weight_i[(*it).first->id] = (*it).second*(log2(documents.size())/n_docs);
-            }*/
+            term->computeWeights(documents.size());
         }
     }
 }
 
 void HashDictionary::print(){ 
-    std::vector<Term*> to_output((print_limit)?print_limit:table.size(), nullptr);
+    std::vector<HashNode*> to_output((print_limit)?print_limit:table.size(), nullptr);
 
     for(size_t i = 0, j = 0; i < table.size(); i++){
         auto entry = table[i];
@@ -85,7 +82,7 @@ void HashDictionary::print(){
         to_output[j] = entry;
         j++;
     }
-    std::sort(to_output.begin(), to_output.end(), [](const Term* a, const Term* b){
+    std::sort(to_output.begin(), to_output.end(), [](const HashNode* a, const HashNode* b){
         if(!a && !b) return false;
         if(!a && b) return false;
         if(a && !b) return true;
@@ -97,7 +94,7 @@ void HashDictionary::print(){
         if(!(*it)) continue;
         std::cout << (*it)->value;
         if(print_frequency){
-            (*it)->docs_counts->print();
+            (*it)->print();
         }
         std::cout << std::endl;
     }

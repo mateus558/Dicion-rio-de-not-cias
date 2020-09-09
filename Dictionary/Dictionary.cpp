@@ -54,8 +54,9 @@ Dictionary::Dictionary(){
 }
 
 bool Dictionary::isValidTerm(const std::string& term){
-    // verify if first character is a number and if the term size is equal to 1 or empty
-    if((term[0] >= '0' && term[0] <= '9') || (term.size() == 1 || term.empty())) return false;
+    // verify if first character is a number and if the term size is less than 3 or empty
+    if(term[0] >= '0' && term[0] <= '9') return false;
+    if(term.size() < 3 || term.empty()) return false;
     // check if the term is a number
     if(!term.empty() && std::find_if(term.begin(), term.end(), [](unsigned char c) { return !std::isdigit(c); }) == term.end()) return false;
     // otherwise, it's a valid term
@@ -63,7 +64,7 @@ bool Dictionary::isValidTerm(const std::string& term){
 }
 
 void Dictionary::addToDocsCounts(Document* doc, DictNode* node){
-   node->docs_counts->insertOrCount(doc);
+   node->insertOrCount(doc);
 }
 
 
@@ -123,7 +124,7 @@ std::vector<Document*> Dictionary::findByTerms(const std::string& terms, const s
         n_comparisons += this->numberComparisons();
         if(!search_result) continue;
         // compute the documents ranks and add then to the heap
-        std::vector<Document*> ranked_docs = search_result->docs_counts->computeRanks();
+        std::vector<Document*> ranked_docs = search_result->computeRanks();
         for(size_t i = 0; i < ranked_docs.size(); i++){
             if(ranked_docs[i] && ranked_docs[i]->rank > 0) heap->insertOrUpdate(ranked_docs[i]);
         }
@@ -139,16 +140,6 @@ std::vector<Document*> Dictionary::findByTerms(const std::string& terms, const s
 
     delete heap;
     heap = nullptr;
-
-    // fill the rest of the results array with other documents if there isn't enough documents in the heap
-    if(i < n_results){
-        size_t k = 0;
-        for(size_t j = i; j < results.size(); j++){
-            while((k < documents.size()) && (documents[k]->rank > 0)){  k++; }
-            results[j] = documents[k];
-            k++;
-        }
-    }
     return results;
 }
 

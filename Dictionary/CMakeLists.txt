@@ -1,11 +1,11 @@
 add_library(${LIBDICT} STATIC 
 		Dictionary.cpp
 		DocumentHeap.cpp
-		DocumentCounterAVL.cpp
+		DictNode.cpp
 )
 
 set_target_properties(${LIBDICT} PROPERTIES PUBLIC_HEADERS
-				"Dictionary.hpp; Document.hpp; DocumentHeap.hpp; DocumentCounterAVL.hpp"
+				"Dictionary.hpp; Document.hpp; DocumentHeap.hpp; DictNode.hpp"
 			)
 
 set_target_properties(${LIBDICT} PROPERTIES LINKER_LANGUAGE CXX)

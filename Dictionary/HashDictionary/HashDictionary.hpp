@@ -8,7 +8,7 @@ using json = nlohmann::json;
 /**
  * \brief DictNode derived class for the hash dictionary
  */
-class Term: public DictNode{
+class HashNode: public DictNode{
 public:
     /// word stored in the term class
     std::string value;
@@ -22,7 +22,7 @@ private:
     /// table size
     const size_t table_size = 113989;
     /// hash table
-    std::vector<Term*> table;
+    std::vector<HashNode*> table;
 
     /// hash function using djb2 algorithm
     size_t h(const std::string key);

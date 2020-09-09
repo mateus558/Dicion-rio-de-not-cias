@@ -56,3 +56,17 @@ void process_mem_usage(double& vm_usage, double& resident_set){
     vm_usage     = vsize / 1024.0;
     resident_set = rss * page_size_kb;
 }
+
+bool save_dataset(MeasureIt begin, MeasureIt end, std::string fname){
+    std::ofstream dataset(fname+".plt");
+    auto it = begin;
+
+    if(!dataset.good() || !dataset.is_open()) return false;
+
+    for(; it != end; it++){
+        auto measure = (*it);
+        dataset << measure.first << "\t" << measure.second << std::endl;
+    }
+    dataset.close();
+    return (it == end);
+}
